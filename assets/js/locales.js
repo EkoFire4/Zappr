@@ -428,7 +428,7 @@ export default {
         <a href="https://ko-fi.com/FrancescoRosi" target="_blank" class="tooltip-link" id="donation-link">Faire un don :)</a>
         <a href="https://trustpilot.com/evaluate/zappr.stream" target="_blank" id="trustpilot-link" class="tooltip-link">Évaluez Zappr sur Trustpilot</a>
         <a href="https://github.com/ZapprTV" target="_blank" id="github-link" class="tooltip-link">Afficher le code source sur GitHub</a>
-        <div class="tooltip-link" id="news-links">Restez informé des dernières actualités en nous suivant sur <a href="https://www.facebook.com/ZapprTV" target="_blank">Facebook</a>, <a href="https://x.com/ZapprStream" target="_blank">Twitter</a> ou <a href="https://mastodon.uno/@zappr" target="_blank">Mastodon</a></div>
+        <div class="tooltip-link" id="news-links">Restez informé des dernières actualités en nous suivant sur <a href="https://www.facebook.com/ZapprTVFR" target="_blank">Facebook</a>, <a href="https://x.com/ZapprStreamFR" target="_blank">Twitter</a> ou <a href="https://piaille.fr/@zappr" target="_blank">Mastodon</a></div>
         <a href="mailto:zappr@francescoro.si" class="tooltip-link" id="email-link">Contactez-nous par email</a>`,
         playerLanguageCSS: `:root {
             --videojs-plyr-quality-text: "Qualité";
@@ -484,8 +484,8 @@ export default {
         welcomeTitle: "Bienvenue sur Zappr !",
         welcomeText: `Zappr vous permet de regarder facilement et gratuitement la télévision numérique terrestre, nationale et locale <span class="italic">(n'oublie pas de sélectionner ta région dans les paramètres !)</span>, ainsi que les chaînes de Samsung TV Plus et Pluto TV.<br><br>Pour commencer à regarder une chaîne, cliquez dessus ou tapez son numéro sur votre clavier et appuyez sur <b>Entrée</b>. Pour zapper, utilisez les touches <b>PageDown</b> et <b>PageUp</b> pour parcourir les chaînes.<br><br>Si une chaîne dispose d'un guide TV, vous pouvez cliquer sur le nom de l'émission en cours pour consulter le programme complète jusqu'à 7 jours à compter du jour actuel.<br><br>Enfin, si vous souhaitez personnaliser la liste des chaînes, en composant une liste de favoris ou en créant de nouvelles listes avec les chaînes de votre choix, tout comme dans un client IPTV, vous pouvez le faire grâce à la fonction <b>My List</b>, accessible en cliquant sur l'icône <img src="${listIcon}"> dans la barre inférieure.<br><br>C'est tout. <b>Bon visionnage !</b>`,
         newsInstructions: "Cliquez sur un titre pour lire l'article complet, ou cliquez sur une image pour l'agrandir.",
-        newsHosting: `Hébergement du flux fourni par <a href="https://mastodon.uno" target="_blank">mastodon.uno</a> :)`,
-        newsURL: "https://mastodon.uno/@zappr.rss",
+        newsHosting: `Hébergement du flux fourni par <a href="https://piaille.fr" target="_blank">piaille.fr</a> :)`,
+        newsURL: "https://piaille.fr/@zappr.rss",
         epgLoading: "L'EPG sera bientôt disponible",
         unreportableErrorDASHiOS: "Il est très probable que votre appareil ne prenne pas en charge ce type de flux en direct. Essayez sur un autre appareil.",
         unreportableErrorFAST: "Les flux de ces chaînes sont mis à jour automatiquement chaque jour. Réessayez plus tard ou dans 24 heures.",

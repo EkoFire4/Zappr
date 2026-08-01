@@ -890,7 +890,7 @@ const loadChannel = async ({ type, url, api = false, name, lcn, logo, fullLogo, 
                 break;
 
             case "wim":
-                const token = await fetch("https://platform.wim.tv/wimtv-server/oauth/token", {
+                const wimToken = await fetch("https://platform.wim.tv/wimtv-server/oauth/token", {
                     method: "POST",
                     headers: {
                         "Authorization": "Basic d3d3Og==",
@@ -904,7 +904,7 @@ const loadChannel = async ({ type, url, api = false, name, lcn, logo, fullLogo, 
                 await fetch(`https://platform.wim.tv/wimtv-server/api/public/live/channel/${parameter}/play`, {
                     method: "POST",
                     headers: {
-                        "Authorization": `Bearer ${token}`,
+                        "Authorization": `Bearer ${wimToken}`,
                         "Content-Type": "application/json"
                     },
                     body: "{}"
@@ -991,11 +991,11 @@ const loadChannel = async ({ type, url, api = false, name, lcn, logo, fullLogo, 
                 break;
 
             case "filmon":
-                const sessionKey = await fetch("https://www.filmon.com/api/init?app_id=android-native&channelProvider=ipad&app_secret=wis9Ohmu7i")
+                const filmonSessionKey = await fetch("https://www.filmon.com/api/init?app_id=android-native&channelProvider=ipad&app_secret=wis9Ohmu7i")
                     .then(response => response.json())
                     .then(json => json.session_key);
 
-                await fetch(`https://eu-api.filmon.com/api/channel/${parameter}?session_key=${sessionKey}&quality=low`)
+                await fetch(`https://eu-api.filmon.com/api/channel/${parameter}?session_key=${filmonSessionKey}&quality=low`)
                     .then(response => response.json())
                     .then(json => {
                         loadStream({
@@ -1043,20 +1043,73 @@ const loadChannel = async ({ type, url, api = false, name, lcn, logo, fullLogo, 
                 break;
 
             case "tf1plus":
-                const playlist = await fetch(`https://raw.githubusercontent.com/Paradise-91/ParaTV/refs/heads/main/playlists/paratv/main/paratv.m3u?_=${Date.now()}`)
+                const paratvPlaylist = await fetch(`https://raw.githubusercontent.com/Paradise-91/ParaTV/refs/heads/main/playlists/paratv/main/paratv.m3u?_=${Date.now()}`)
                     .then(response => response.text())
                     .then(text => text.split("\n"));
 
-                const m3uRegex = new RegExp(/^\d+$/.test(parameter) ? `epg-s="${parameter}".*tf1\.fr` : `tvg-id="${parameter}.fr".*tf1\.fr`);
-                const playlistURL = playlist[playlist.indexOf(playlist.filter(line => m3uRegex.test(line))[0]) + 1];
+                const paratvM3URegex = new RegExp(/^\d+$/.test(parameter) ? `epg-s="${parameter}".*tf1\.fr` : `tvg-id="${parameter}.fr".*tf1\.fr`);
+                const tf1PlusPlaylistURL = paratvPlaylist[paratvPlaylist.indexOf(paratvPlaylist.filter(line => paratvM3URegex.test(line))[0]) + 1];
                 loadStream({
                     type: type,
-                    url: playlistURL,
+                    url: tf1PlusPlaylistURL,
                     name: name,
                     lcn: lcn,
                     logo: logo,
                     additional: additional
                 });
+                break;
+
+            case "canalplus":
+                const canalplusPortalID = await fetch("https://player.canalplus.com/one/configs/v2/13/mycanal/prod.json")
+                    .then(response => response.json())
+                    .then(json => json.pass.portailId);
+
+                const canalplusToken = await fetch(`https://api.zappr.stream/canalplus-token/${canalplusPortalID}`).then(response => response.text());
+                const canalplusLiveToken = await fetch("https://ltv.services.canalplustech.pro/api/V4/zones/cpfra/devices/3/apps/1/jobs/InitLiveTV", {
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        ServiceRequest: {
+                            InData: {
+                                UseRmuTokenPlaceHolder: true,
+                                PassData: {
+                                    Id: 0,
+                                    Token: canalplusToken
+                                },
+                                DeviceKeyId: "1",
+                                PDSData: {
+                                    GroupTypes: ""
+                                },
+                                DeviceSpecificities: {
+                                    BpkCompatibility: true
+                                }
+                            }
+                        }
+                    }),
+                    method: "POST"
+                })
+                    .then(response => response.json())
+                    .then(json => json.ServiceResponse.OutData.RMUToken);
+
+                const canalplusDashURL = await fetch(`https://routemeup.canalplus-bo.net/plfiles/v2/metr/dash-ssl-event/${parameter}.json?token=${canalplusLiveToken}`)
+                    .then(response => response.json())
+                    .then(json => json.dvr?.src ?? json.primary.src);
+
+                loadStream({
+                    type: "iframe",
+                    url: `clearkey/?url=${encodeURIComponent(canalplusDashURL)}`,
+                    name: name,
+                    lcn: lcn,
+                    logo: logo,
+                    fallbackType: fallbackType,
+                    fallbackURL: fallbackURL,
+                    fallbackAPI: fallbackAPI,
+                    fallbackLicense: fallbackLicense,
+                    fallbackLicenseDetails: fallbackLicenseDetails,
+                    additional: additional
+                });
+                break;
 
         };
     } else if (license) {
@@ -1550,28 +1603,48 @@ const channelOnClick = async (e) => {
                     return;
                 };
             };
-            await loadChannel({
-                type: el.dataset.type,
-                url: el.dataset.url,
-                api: el.dataset.api,
-                name: el.dataset.name,
-                lcn: el.dataset.lcn,
-                logo: el.dataset.logo,
-                fullLogo: el.dataset.fullLogo,
-                radio: el.dataset.radio,
-                http: el.dataset.http,
-                license: el.dataset.license,
-                licenseDetails: el.dataset.licenseDetails,
-                feed: el.dataset.feed,
-                fallbackType: el.dataset.fallbackType,
-                fallbackURL: el.dataset.fallbackUrl,
-                fallbackAPI: el.dataset.fallbackApi,
-                fallbackCSSFix: el.dataset.fallbackCssfix,
-                fallbackLicense: el.dataset.fallbackLicense,
-                fallbackLicenseDetails: el.dataset.fallbackLicenseDetails,
-                timeshift: el.dataset.timeshift,
-                additional: el.dataset.additional
-            });
+            try {
+                await loadChannel({
+                    type: el.dataset.type,
+                    url: el.dataset.url,
+                    api: el.dataset.api,
+                    name: el.dataset.name,
+                    lcn: el.dataset.lcn,
+                    logo: el.dataset.logo,
+                    fullLogo: el.dataset.fullLogo,
+                    radio: el.dataset.radio,
+                    http: el.dataset.http,
+                    license: el.dataset.license,
+                    licenseDetails: el.dataset.licenseDetails,
+                    feed: el.dataset.feed,
+                    fallbackType: el.dataset.fallbackType,
+                    fallbackURL: el.dataset.fallbackUrl,
+                    fallbackAPI: el.dataset.fallbackApi,
+                    fallbackCSSFix: el.dataset.fallbackCssfix,
+                    fallbackLicense: el.dataset.fallbackLicense,
+                    fallbackLicenseDetails: el.dataset.fallbackLicenseDetails,
+                    timeshift: el.dataset.timeshift,
+                    additional: el.dataset.additional
+                });
+            } catch {
+                if (el.dataset.fallbackType != null && el.dataset.fallbackUrl != null) {
+                    await loadChannel({
+                        type: el.dataset.fallbackType,
+                        url: el.dataset.fallbackUrl,
+                        api: el.dataset.fallbackApi,
+                        name: el.dataset.name,
+                        lcn: el.dataset.lcn,
+                        logo: el.dataset.logo,
+                        fullLogo: el.dataset.fullLogo,
+                        radio: el.dataset.radio,
+                        license: el.dataset.fallbackLicense,
+                        licenseDetails: el.dataset.fallbackLicenseDetails,
+                        feed: el.dataset.feed,
+                        timeshift: el.dataset.timeshift,
+                        additional: el.dataset.additional
+                    });
+                };
+            };
         } else if ((["channel-program", "channel-program-progress", "channel-program-progress-background", "channel-program-times"].includes(e.target.className) || e.target.nodeName === "B")) {
             if (!el.classList.contains("channel")) el = el.closest(".channel");
             document.querySelector("#epg-channel").innerText = el.dataset.name;
