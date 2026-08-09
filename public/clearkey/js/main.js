@@ -62,6 +62,7 @@ if (finalURL) {
                 } else if (fallback && window.parent?.zappr?.player) window.parent.zappr.player.src({});
             };
         };
+        if ((keys || (kid && key)) && fallback && /iPad|iPhone|iPod/.test(navigator.userAgent) && window.parent?.zappr?.player) window.parent.zappr.player.src({});
         player.addEventListener("error", onError);
         await player.load(finalURL).catch(onError);
 
